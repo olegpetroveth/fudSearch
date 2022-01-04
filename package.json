@@ -1,0 +1,17 @@
+{
+  "name": "fudsearch",
+  "version": "1.0.0",
+  "description": "Facilitates searches for FudFarm NFTs",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Oleg Petrov",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "dotenv": "^10.0.0",
+    "qs": "^6.10.2"
+  }
+}
