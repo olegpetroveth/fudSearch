@@ -31,12 +31,6 @@ class Bot {
 
     async execute(message, command, args) {
         switch(command) {
-            case 'ping':
-                const timeTaken = Date.now() - message.createdTimestamp;
-                message.reply(`Pong! This message had a latency of ${timeTaken}ms.`);
-                break;
-
-
             case 'floors':
                 let response = await this.getFloors();
                 message.reply(response);
@@ -44,28 +38,36 @@ class Bot {
                 
 
             default:
-                message.reply(`Unknown command.`);
+                message.reply(`Unknown command, farmer.`);
                 break;
         }
     }
 
     async getFloors() {
+        let message = '';
+
         // let simples = readFromFile('../data/simples.txt');
         let doubles = readFromFile('./data/doubles.txt');
         let triples = readFromFile('./data/triples.txt');
         let quadruples = readFromFile('./data/quadruples.txt');
     
-        let floorDoubleListing = await OpenSeaApi.fetchListingsFromContract(FUD_FARM_ADDRESS, doubles, 0, OpenSeaApi.FILTER_LIMIT);
-        let floorTripleListing = await OpenSeaApi.fetchListingsFromContract(FUD_FARM_ADDRESS, triples, 0, OpenSeaApi.FILTER_LIMIT);
-        let floorQuadrupleListing = await OpenSeaApi.fetchListingsFromContract(FUD_FARM_ADDRESS, quadruples, 0, OpenSeaApi.FILTER_LIMIT);
-    
-        let floorDouble = floorDoubleListing.map(listingData => new Listing(listingData)).sort(sortByPrice)[0];
-        let floorTriple = floorTripleListing.map(listingData => new Listing(listingData)).sort(sortByPrice)[0];
-        let floorQuadruple = floorQuadrupleListing.map(listingData => new Listing(listingData)).sort(sortByPrice)[0];
+        let [floorDoubleListing, errorDouble] = await OpenSeaApi.fetchListingsFromContract(FUD_FARM_ADDRESS, doubles, 0, OpenSeaApi.FILTER_LIMIT);
+        let [floorTripleListing, errorTriple] = await OpenSeaApi.fetchListingsFromContract(FUD_FARM_ADDRESS, triples, 0, OpenSeaApi.FILTER_LIMIT);
+        let [floorQuadrupleListing, errorQuad] = await OpenSeaApi.fetchListingsFromContract(FUD_FARM_ADDRESS, quadruples, 0, OpenSeaApi.FILTER_LIMIT);
 
-        let message = `Lowest double is ${floorDouble?.price} eth (ID: #${floorDouble?.tokenId})
+        if(errorDouble || errorTriple || errorQuad) {
+            // logs might not be easily availabe, better display minimal info
+            message = `Error while communicating with OpenSea API (${errorDouble.response?.status})`;
+        } else {            
+            let floorDouble = floorDoubleListing.map(listingData => new Listing(listingData)).sort(sortByPrice)[0];
+            let floorTriple = floorTripleListing.map(listingData => new Listing(listingData)).sort(sortByPrice)[0];
+            let floorQuadruple = floorQuadrupleListing.map(listingData => new Listing(listingData)).sort(sortByPrice)[0];
+            
+            //keep indentation like this or find a better to format text replies
+            message = `Lowest double is ${floorDouble?.price} eth (ID: #${floorDouble?.tokenId})
 Lowest triple is ${floorTriple?.price} eth (ID: #${floorTriple?.tokenId})
 Lowest quadruple is ${floorQuadruple?.price} eth (ID: #${floorQuadruple?.tokenId})`;
+        }
     
         return message;
     };
